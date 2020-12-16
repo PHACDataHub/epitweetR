@@ -1,0 +1,1 @@
+Rscript -e "epitweetr::detect_loop('/home/rstudio/tweets')"

@@ -1,12 +1,11 @@
-# Modified from: https://juanitorduz.github.io/dockerize-a-shinyapp/
-# Added: install shiny server new package https://stackoverflow.com/questions/52377910/how-to-find-shiny-server-executable-and-reference-it-in-shiny-server-sh
-# https://stackoverflow.com/questions/57421577/how-to-run-r-shiny-app-in-docker-container
-# Used: https://www.statworx.com/de/blog/how-to-dockerize-shinyapps/
-# Configuration setup from: https://github.com/kwhitehall/Shiny_app_Azure/blob/master/Dockerfile
+FROM rocker/rstudio:latest 
 
-FROM rocker/shiny:latest
+## update system libraries
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get clean
 
-# system libraries of general use -> Ubuntu packages
+# Install dependencies for system and epitweetr
 RUN apt-get update && apt-get install -y \
     sudo \
     pandoc \
@@ -21,35 +20,34 @@ RUN apt-get update && apt-get install -y \
     nano \
     libsodium-dev \
     libsecret-1-dev \
-    openjdk-8-jre
+    openjdk-8-jre \ 
+    gnupg2 \ 
+    curl
+#    nginx
+
+# Install sbt 
+RUN echo "deb https://dl.bintray.com/sbt/debian /" | sudo tee -a /etc/apt/sources.list.d/sbt.list
+RUN sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 642AC823
+RUN sudo apt-get update
+RUN sudo apt-get install sbt
 
 # Set openjdk environment variable
 ENV JAVA_HOME /usr/lib/jvm/java-1.8.0-openjdk-amd64 
 
-## update system libraries
-RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get clean
-
-COPY run_epitweetr.R /srv/shiny-server/
-RUN mkdir /srv/shiny-server/twitter_data
-
 # install renv & restore packages
 RUN Rscript -e 'install.packages("renv")'
-RUN Rscript -e 'install.packages("epitweetr",dependencies = TRUE)'
 RUN Rscript -e 'install.packages("tinytex"); tinytex::install_tinytex()'
-RUN Rscript -e 'renv::restore()' 
+RUN Rscript -e 'install.packages("epitweetr",dependencies = TRUE)'
+RUN Rscript -e 'renv::restore()'
 
-# Port 
-EXPOSE 3838
+# Make the directory where you will store the tweets 
+RUN mkdir /home/rstudio/tweets
 
-# Copy further configuration files into the Docker image
-COPY shiny-server.sh /usr/bin/shiny-server.sh
+# Import the necessary files into the container
+COPY epitweetr_app.r /home/rstudio/
+COPY detect_loop.sh /home/rstudio/
+COPY search_loop.sh /home/rstudio/
+COPY INSTRUCTIONS.txt /home/rstudio/
 
-RUN ["chmod", "+x", "/usr/bin/shiny-server.sh"]
-
-# allow permission
-RUN sudo chmod -R 755 /srv/shiny-server
-
-# run app
-CMD ["R", "-e", "shiny::runApp('/srv/shiny-server/run_epitweetr.R', host = '0.0.0.0', port = 3838)"]
+RUN chmod 777 /home/rstudio
+RUN chmod 777 /home/rstudio/tweets
