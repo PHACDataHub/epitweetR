@@ -1,4 +1,4 @@
-# EpitweetR deployment
+# EpitweetR Docker Image
 
 This repo gives you a docker file, which contains all the configuration needed to run epitweetR.  This can be used to deploy into the cloud, if you want to run it in a server running 24 hours.
 
