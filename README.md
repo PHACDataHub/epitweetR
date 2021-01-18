@@ -1,3 +1,9 @@
 # EpitweetR deployment
 
-This repo is for deploying a Docker container of EpitweetR on the cloud
+This repo gives you a docker file, which contains all the configuration needed to run epitweetR.  This can be used to deploy into the cloud, if you want to run it in a server running 24 hours.
+
+## What is EpitweetR
+
+[EpitweetR](https://www.ecdc.europa.eu/en/publications-data/epitweetr-tool) is a surveillance tool that was created by the European Centre of Disease control.  It is an RShiny application that collects tweets of various diseases by geographical region and allow users to monitor trends of those diseases by time, place and topic. 
+
+The GitHub repo can be found [here](https://github.com/EU-ECDC/epitweetr).
